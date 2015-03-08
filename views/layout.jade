@@ -1,0 +1,15 @@
+doctype html
+html
+  head
+    title= title
+    meta(name="viewport", content="width=device-width, initial-scale=1")
+    != LRScript
+    block headLinks
+  body
+    #layout
+      #main
+        h1(style='white-space:nowrap;').titlehead#title= title
+        #content                        
+          block content
+  footer
+    block script

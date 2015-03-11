@@ -5,6 +5,8 @@ var mongo = require('../lib/mongo');
 
 app.set('port', process.env.PORT || 3000);
 
+debug('Booting %s', 'dawn');
+
 // MongoDB连接初始化
 mongo.init(function (err, db) {
     if (err) throw err;

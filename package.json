@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./bin/www",
+    "dev": "DEBUG=dawn node-dev --debug ./bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,7 +23,7 @@
     "connect-flash": "^0.1.1",
     "connect-mongo": "^0.4.1",
     "cookie-parser": "~1.0.1",
-    "debug": "~0.7.4",
+    "debug": "^2.1.2",
     "express": "^4.12.2",
     "express-session": "^1.6.5",
     "jade": "~1.3.0",

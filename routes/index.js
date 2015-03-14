@@ -1,6 +1,7 @@
 var router = require('express').Router();
 var async = require('async');
 var bookDao = require('../lib/bookDao');
+var aws = require("aws-lib");
 
 /* 显示主页. */
 router.get('/', function (req, res) {
@@ -28,9 +29,10 @@ router.get('/createBook', function (req, res) {
  */
 router.get('/reload', function (req, res) {
     //导入 aws node js
-    var aws = require("aws-lib");
 
-    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22');
+    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22', {
+        host: 'ecs.amazonaws.jp'
+    });
 
     // async.waterfall, function挨个执行，一旦有一个function出错，直接跳到最后一个汇总用的function
     // return只是强到一下到此为止, 怕后面忘了再写个res.render什么的
@@ -43,7 +45,7 @@ router.get('/reload', function (req, res) {
                 SearchIndex: "Books",
                 ResponseGroup: "SalesRank",
                 Sort: "salesrank",
-                ItemPage: "2"
+                ItemPage: "1"
             }, next);
         },
         function(result, next) {

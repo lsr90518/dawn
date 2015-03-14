@@ -33,7 +33,7 @@ router.get('/reload', function (req, res) {
     var aws = require("aws-lib");
 
     prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22' ,{
-
+        host:"ecs.amazonaws.jp"
     });
 
     // async.waterfall, function挨个执行，一旦有一个function出错，直接跳到最后一个汇总用的function

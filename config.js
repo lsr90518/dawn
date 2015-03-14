@@ -1,7 +1,7 @@
 var config = {
     dev: {
         mongo: {
-            url: 'mongodb://104.155.213.128:80/dawn'
+            url: 'mongodb://localhost:27017/dawn'
         }
     },
     production: {

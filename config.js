@@ -1,12 +1,12 @@
 var config = {
     dev: {
         mongo: {
-            url: 'mongodb://localhost:27017/dawn'
+            url: 'mongodb://104.155.213.128:80/dawn'
         }
     },
     production: {
         mongo: {
-            url: 'mongodb://104.155.213.128:8080/dawn'
+            url: 'mongodb://104.155.213.128:80/dawn'
         }
     }
 };

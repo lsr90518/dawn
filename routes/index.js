@@ -1,6 +1,8 @@
 var router = require('express').Router();
 var async = require('async');
 var bookDao = require('../lib/bookDao');
+var later = require('later');
+
 
 /* 显示主页. */
 router.get('/', function (req, res) {
@@ -30,30 +32,46 @@ router.get('/reload', function (req, res) {
     //导入 aws node js
     var aws = require("aws-lib");
 
-    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22');
+    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22' ,{
+
+    });
 
     // async.waterfall, function挨个执行，一旦有一个function出错，直接跳到最后一个汇总用的function
     // return只是强到一下到此为止, 怕后面忘了再写个res.render什么的
-    return async.waterfall([
+    var pageNum = 0;
+
+    async.waterfall([
+//        function(next) {
+//            pageNum++;
+//            // 第一个function, 查询信息
+//            //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
+//            prodAdv.call("ItemSearch", {
+//                BrowseNode: "548206",
+//                SearchIndex: "Books",
+//                MinimumPrice: "1000",
+//                MaximumPrice: "1000",
+//                ResponseGroup: "SalesRank,ItemAttributes",
+//                Sort: "salesrank",
+//                ItemPage: pageNum
+//            }, next);
+//        },
         function(next) {
-            // 第一个function, 查询信息
-            //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
-            prodAdv.call("ItemSearch", {
-                BrowseNode: "465610",
-                SearchIndex: "Books",
-                ResponseGroup: "SalesRank",
-                Sort: "salesrank",
-                ItemPage: "2"
+            pageNum++;
+            prodAdv.call("BrowseNodeLookup", {
+                BrowseNodeId: "13383991"
             }, next);
         },
         function(result, next) {
             // 第二个function, 查询到的信息登录到数据库
-
+            console.log("pageNum:"+pageNum);
             console.log("Result from amazon", result);
-            var items = result.Items.Item;
-            if(!items) {
-                return next("No Item"); // 别忘return
-            }
+            console.log(result.BrowseNodes.BrowseNode.Children);
+            console.log(result.BrowseNodes.BrowseNode.Ancestors);
+
+//            var items = result.Items.Item;
+//            if(!items) {
+//                return next("No Item"); // 别忘return
+//            }
 
 //            console.log(result.BrowseNodes.BrowseNode.TopSellers);
 //            console.log(result.BrowseNodes.BrowseNode.TopItemSet);
@@ -67,9 +85,10 @@ router.get('/reload', function (req, res) {
             // each有三个方法, async.each全异步并发，async.eachSeries一个一个执行，async.eachLimit可以设定并发数
             // 查询得到的数据可能存在排序问题，所以先用async.eachSeries来填到数据库里
 
-            async.eachSeries(items, function (item, next) {
-                bookDao.create(item, next);
-            }, next)
+//            async.eachSeries(items, function (item, next) {
+//                console.log("pageNum:"+pageNum);
+//                bookDao.create(item, next);
+//            }, next)
         }
     ], function(err, result) {
         if (err) {
@@ -82,6 +101,7 @@ router.get('/reload', function (req, res) {
             });
         }
     });
+    return res.json({"data":"ok"});
 
 
     //根据ID 搜索详细，获取单个商品详细内容。
@@ -112,14 +132,83 @@ router.get('/test', function (req, res) {
     //});
 
     // 查询使用bookDao.find就可以
-    var query = {}; // Mongodb查询query
-    bookDao.findAll(query, function(err, resultList) {
-        if(err) {
-            return res.json({"err": err});
-        } else {
-            res.json({"data": resultList});
-        }
-    });
+//    var query = {}; // Mongodb查询query
+//    bookDao.findAll(query, function(err, resultList) {
+//        if(err) {
+//            return res.json({"err": err});
+//        } else {
+//            res.json({"data": resultList});
+//        }
+//    });
+
+    //later
+    var aws = require("aws-lib");
+
+    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22');
+    later.date.localTime();
+
+    console.log("Now:"+new Date());
+    var pageNum = 1;
+    var sched = later.parse.recur().every(5).second(),
+        t = later.setInterval(function() {
+
+
+
+            async.waterfall([
+                function(next) {
+                    pageNum++;
+                    if(pageNum == 10000){
+                        t.clear();
+                        console.log("Clear");
+                    }
+                    // 第一个function, 查询信息
+                    //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
+                    prodAdv.call("ItemSearch", {
+                        BrowseNode: "465610",
+                        SearchIndex: "Books",
+                        MinimumPrice: 1000,
+                        ResponseGroup: "SalesRank,ItemAttributes",
+                        Sort: "salesrank",
+                        ItemPage: pageNum
+                    }, next);
+                },
+                function(result, next) {
+                    // 第二个function, 查询到的信息登录到数据库
+                    console.log("pageNum:"+pageNum);
+                    console.log("Result from amazon", result.Items.Request.Errors);
+
+                    var items = result.Items.Item;
+                    if(!items) {
+                        return next("No Item"); // 别忘return
+                    }
+
+                    console.log("pageNum create:"+pageNum);
+                    bookDao.create(items, next);
+//                    async.eachSeries(items, function (item, next) {
+//                        console.log("pageNum create:"+pageNum);
+//                        bookDao.create(item, next);
+//                    }, next)
+                }
+            ], function(err, result) {
+                if (err) {
+                    return res.json({
+                        error: err
+                    });
+                } else {
+                    return res.json({
+                        result: "OK"
+                    });
+                }
+            });
+
+        }, sched);
+
+    function test(val) {
+        console.log(new Date());
+        console.log(val);
+    }
+
+
 });
 
 module.exports = router;

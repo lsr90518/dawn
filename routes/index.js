@@ -2,6 +2,7 @@ var router = require('express').Router();
 var async = require('async');
 var bookDao = require('../lib/bookDao');
 var later = require('later');
+var amazonGenre = require('../lib/amazonGenre.js');
 
 
 /* 显示主页. */
@@ -32,8 +33,8 @@ router.get('/reload', function (req, res) {
     //导入 aws node js
     var aws = require("aws-lib");
 
-    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22' ,{
-        host:"ecs.amazonaws.jp"
+    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22', {
+        host: "ecs.amazonaws.jp"
     });
 
     // async.waterfall, function挨个执行，一旦有一个function出错，直接跳到最后一个汇总用的function
@@ -55,15 +56,15 @@ router.get('/reload', function (req, res) {
 //                ItemPage: pageNum
 //            }, next);
 //        },
-        function(next) {
+        function (next) {
             pageNum++;
             prodAdv.call("BrowseNodeLookup", {
                 BrowseNodeId: "13383991"
             }, next);
         },
-        function(result, next) {
+        function (result, next) {
             // 第二个function, 查询到的信息登录到数据库
-            console.log("pageNum:"+pageNum);
+            console.log("pageNum:" + pageNum);
             console.log("Result from amazon", result);
             console.log(result.BrowseNodes.BrowseNode.Children);
             console.log(result.BrowseNodes.BrowseNode.Ancestors);
@@ -90,7 +91,7 @@ router.get('/reload', function (req, res) {
 //                bookDao.create(item, next);
 //            }, next)
         }
-    ], function(err, result) {
+    ], function (err, result) {
         if (err) {
             return res.json({
                 error: err
@@ -101,7 +102,7 @@ router.get('/reload', function (req, res) {
             });
         }
     });
-    return res.json({"data":"ok"});
+    return res.json({"data": "ok"});
 
 
     //根据ID 搜索详细，获取单个商品详细内容。
@@ -147,17 +148,16 @@ router.get('/test', function (req, res) {
     prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22');
     later.date.localTime();
 
-    console.log("Now:"+new Date());
+    console.log("Now:" + new Date());
     var pageNum = 1;
     var sched = later.parse.recur().every(5).second(),
-        t = later.setInterval(function() {
-
+        t = later.setInterval(function () {
 
 
             async.waterfall([
-                function(next) {
+                function (next) {
                     pageNum++;
-                    if(pageNum == 10000){
+                    if (pageNum == 10000) {
                         t.clear();
                         console.log("Clear");
                     }
@@ -172,24 +172,24 @@ router.get('/test', function (req, res) {
                         ItemPage: pageNum
                     }, next);
                 },
-                function(result, next) {
+                function (result, next) {
                     // 第二个function, 查询到的信息登录到数据库
-                    console.log("pageNum:"+pageNum);
+                    console.log("pageNum:" + pageNum);
                     console.log("Result from amazon", result.Items.Request.Errors);
 
                     var items = result.Items.Item;
-                    if(!items) {
+                    if (!items) {
                         return next("No Item"); // 别忘return
                     }
 
-                    console.log("pageNum create:"+pageNum);
+                    console.log("pageNum create:" + pageNum);
                     bookDao.create(items, next);
 //                    async.eachSeries(items, function (item, next) {
 //                        console.log("pageNum create:"+pageNum);
 //                        bookDao.create(item, next);
 //                    }, next)
                 }
-            ], function(err, result) {
+            ], function (err, result) {
                 if (err) {
                     return res.json({
                         error: err
@@ -210,5 +210,32 @@ router.get('/test', function (req, res) {
 
 
 });
+
+/**
+ * 获取所有根节点
+ * e.g http://localhost:3000/rootGenre
+ */
+router.get('/rootGenre', function (req, res) {
+    res.json(amazonGenre.getLeafGenreList());
+});
+
+/**
+ * 获取给定nodeId的父节点
+ * e.g. http://localhost:3000/getParent/507138
+ */
+router.get('/getParent/:id', function (req, res) {
+    var nodeId = req.params.id;
+    res.json(amazonGenre.findParent(nodeId, true));
+});
+
+/**
+ * 获取给定nodeId的节点
+ * e.g. http://localhost:3000/getNode/507138
+ */
+router.get('/getNode/:id', function (req, res) {
+    var nodeId = req.params.id;
+    res.json(amazonGenre.findNode(nodeId, false));
+});
+
 
 module.exports = router;

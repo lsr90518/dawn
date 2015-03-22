@@ -2,6 +2,7 @@ var router = require('express').Router();
 var async = require('async');
 var bookDao = require('../lib/bookDao');
 var later = require('later');
+var amazonGenre = require('../lib/amazonGenre.js');
 
 
 /* 显示主页. */
@@ -32,8 +33,8 @@ router.get('/reload', function (req, res) {
     //导入 aws node js
     var aws = require("aws-lib");
 
-    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22' ,{
-        host:"ecs.amazonaws.jp"
+    prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22', {
+        host: "ecs.amazonaws.jp"
     });
 
     // async.waterfall, function挨个执行，一旦有一个function出错，直接跳到最后一个汇总用的function
@@ -55,15 +56,15 @@ router.get('/reload', function (req, res) {
 //                ItemPage: pageNum
 //            }, next);
 //        },
-        function(next) {
+        function (next) {
             pageNum++;
             prodAdv.call("BrowseNodeLookup", {
-                BrowseNodeId: "466284"
+                BrowseNodeId: "13383991"
             }, next);
         },
-        function(result, next) {
+        function (result, next) {
             // 第二个function, 查询到的信息登录到数据库
-            console.log("pageNum:"+pageNum);
+            console.log("pageNum:" + pageNum);
             console.log("Result from amazon", result);
             console.log(result.BrowseNodes.BrowseNode.Children);
             console.log(result.BrowseNodes.BrowseNode.Ancestors);
@@ -90,7 +91,7 @@ router.get('/reload', function (req, res) {
 //                bookDao.create(item, next);
 //            }, next)
         }
-    ], function(err, result) {
+    ], function (err, result) {
         if (err) {
             return res.json({
                 error: err
@@ -101,7 +102,7 @@ router.get('/reload', function (req, res) {
             });
         }
     });
-    return res.json({"data":"ok"});
+    return res.json({"data": "ok"});
 
 
     //根据ID 搜索详细，获取单个商品详细内容。
@@ -115,88 +116,126 @@ router.get('/reload', function (req, res) {
 /* GET test page. */
 router.get('/test', function (req, res) {
 
+    ////连接mongodb服务器，无用户名密码
+    ////db name = dawn
+    ////test collection = user
+    //var server = new mongodb.Server("104.155.213.128", 80, {safe: true});
+    //new mongodb.Db('dawn', server, {}).open(function (error, client) {
+    //    if (error) throw error;
+    //    var collection = new mongodb.Collection(client, 'user');
+    //    collection.find(function (error, cursor) {
+    //        cursor.each(function (error, doc) {
+    //            if (doc) {
+    //                console.log(doc);
+    //            }
+    //        });
+    //    });
+    //});
+
+    // 查询使用bookDao.find就可以
+//    var query = {}; // Mongodb查询query
+//    bookDao.findAll(query, function(err, resultList) {
+//        if(err) {
+//            return res.json({"err": err});
+//        } else {
+//            res.json({"data": resultList});
+//        }
+//    });
+
     //later
     var aws = require("aws-lib");
 
     prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJJOJrP5iDm01pjuBDdXZ', 'lb90518-22');
     later.date.localTime();
 
-    var minimumPrice = 950;
-    var interval = 50;
-
+    console.log("Now:" + new Date());
     var pageNum = 1;
-
-    var priceSched = later.parse.recur().every(30).second(),
-        priceTimer = later.setInterval(function(){
-            minimumPrice = minimumPrice + interval;
-            if(minimumPrice == 100100){
-                console.log("minnimumPrice>"+minimumPrice);
-                interval = 100000;
-            } else if(minimumPrice == 500000){
-                console.log("minnimumPrice>"+minimumPrice);
-                priceTimer.clear();
-                return res.json({data:"ok"});
-            } else {
-
-                var pageSched = later.parse.recur().every(2).second(),
-                    t = later.setInterval(function () {
-                        async.waterfall([
-                            function (next) {
+    var sched = later.parse.recur().every(5).second(),
+        t = later.setInterval(function () {
 
 
-                                // 第一个function, 查询信息
-                                prodAdv.call("ItemSearch", {
-                                    BrowseNode: "465610",
-                                    SearchIndex: "Books",
-                                    MinimumPrice: minimumPrice,
-                                    MaximumPrice: minimumPrice+interval,
-                                    ResponseGroup: "SalesRank,ItemAttributes",
-                                    Sort: "salesrank",
-                                    ItemPage: pageNum
-                                }, next);
-                            },
-                            function (result, next) {
-                                // 第二个function, 查询到的信息登录到数据库
-                                console.log("pageNum:" + pageNum);
-                                console.log("Result from amazon", result);
-                                var items = result.Items.Item;
-                                if (!items) {
-                                    return next("No Item"); // 别忘return
-                                }
+            async.waterfall([
+                function (next) {
+                    pageNum++;
+                    if (pageNum == 10000) {
+                        t.clear();
+                        console.log("Clear");
+                    }
+                    // 第一个function, 查询信息
+                    //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
+                    prodAdv.call("ItemSearch", {
+                        BrowseNode: "465610",
+                        SearchIndex: "Books",
+                        MinimumPrice: 1000,
+                        ResponseGroup: "SalesRank,ItemAttributes",
+                        Sort: "salesrank",
+                        ItemPage: pageNum
+                    }, next);
+                },
+                function (result, next) {
+                    // 第二个function, 查询到的信息登录到数据库
+                    console.log("pageNum:" + pageNum);
+                    console.log("Result from amazon", result.Items.Request.Errors);
 
-                                bookDao.create(items, next);
-                                var totalPage = parseInt(result.Items.TotalPages);
+                    var items = result.Items.Item;
+                    if (!items) {
+                        return next("No Item"); // 别忘return
+                    }
 
-                                if (pageNum == 10) {
-                                    t.clear();
-                                    console.log("page timer Clear");
-                                    pageNum = 1;
-                                } else if(pageNum == totalPage){
-                                        t.clear();
-                                        console.log("page timer Clear");
-                                        pageNum = 1;
-                                } else {
-                                    pageNum++;
-                                }
+                    console.log("pageNum create:" + pageNum);
+                    bookDao.create(items, next);
+//                    async.eachSeries(items, function (item, next) {
+//                        console.log("pageNum create:"+pageNum);
+//                        bookDao.create(item, next);
+//                    }, next)
+                }
+            ], function (err, result) {
+                if (err) {
+                    return res.json({
+                        error: err
+                    });
+                } else {
+                    return res.json({
+                        result: "OK"
+                    });
+                }
+            });
 
-                            }
-                        ], function (err, result) {
-                            console.log("err:",err);
-                            console.log("minimumPrice:"+minimumPrice)
-//                            if (err) {
-//                                return res.json({
-//                                    error: err
-//                                });
-//                            } else {
-//                                return res.json({
-//                                    result: "OK"
-//                                });
-//                            }
-                        });
-                    }, pageSched);
-            }
+        }, sched);
 
-        },priceSched);
+    function test(val) {
+        console.log(new Date());
+        console.log(val);
+    }
+
+
 });
+
+/**
+ * 获取所有根节点
+ * e.g http://localhost:3000/rootGenre
+ */
+router.get('/rootGenre', function (req, res) {
+    res.json(amazonGenre.getLeafGenreList());
+});
+
+/**
+ * 获取给定nodeId的父节点
+ * e.g. http://localhost:3000/getParent/507138
+ */
+router.get('/getParent/:id', function (req, res) {
+    var nodeId = req.params.id;
+    res.json(amazonGenre.findParent(nodeId, true));
+});
+
+/**
+ * 获取给定nodeId的节点
+ * e.g. http://localhost:3000/getNode/507138
+ */
+router.get('/getNode/:id', function (req, res) {
+    var nodeId = req.params.id;
+    res.json(amazonGenre.findNode(nodeId, false));
+});
+
 
 module.exports = router;

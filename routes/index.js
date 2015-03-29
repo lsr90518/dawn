@@ -149,7 +149,7 @@ router.get('/test', function (req, res) {
     later.date.localTime();
 
     console.log("Now:" + new Date());
-    var pageNum = 1;
+    var pageNum = 0;
     var sched = later.parse.recur().every(5).second(),
         t = later.setInterval(function () {
 
@@ -175,7 +175,7 @@ router.get('/test', function (req, res) {
                 function (result, next) {
                     // 第二个function, 查询到的信息登录到数据库
                     console.log("pageNum:" + pageNum);
-                    console.log("Result from amazon", result.Items.Request.Errors);
+                    console.log("Result from amazon", result);
 
                     var items = result.Items.Item;
                     if (!items) {
@@ -212,7 +212,7 @@ router.get('/test', function (req, res) {
 });
 
 /**
- * 获取所有根节点
+ * 获取所有叶子节点
  * e.g http://localhost:3000/rootGenre
  */
 router.get('/rootGenre', function (req, res) {

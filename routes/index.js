@@ -70,8 +70,10 @@ router.get('/reload', function (req, res) {
                     // 第二个function, 查询到的信息登录到数据库
                     totalpage = result.Items.TotalPages;
                     console.log("total page:" + totalpage);
+                    var items;
                     if(result.Items.Item) {
                         console.log("Result from amazon", result.Items.Item);
+                        items = result.Items.Item;
                     }
                     if(result.Items.Request.Errors){
                         console.log(result.Items.Request.Errors);

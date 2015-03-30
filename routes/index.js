@@ -74,12 +74,12 @@ router.get('/reload', function (req, res) {
                     if(result.Items.Item) {
                         console.log("Result from amazon", result.Items.Item);
                         items = result.Items.Item;
+                        bookDao.create(items, next);
                     }
                     if(result.Items.Request.Errors){
                         console.log(result.Items.Request.Errors);
                     }
-
-                    bookDao.create(items, next);
+                    
                     if(i == 3368){
                         t.clear();
                     }

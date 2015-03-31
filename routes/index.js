@@ -1,6 +1,7 @@
 var router = require('express').Router();
 var async = require('async');
 var bookDao = require('../lib/bookDao');
+var countDao = require('../lib/countDao');
 var later = require('later');
 var amazonGenre = require('../lib/amazonGenre.js');
 var aws = require("aws-lib");
@@ -45,14 +46,28 @@ router.get('/reload', function (req, res) {
     var i = 0;
     var currentBrowseId = 0;
     var totalpage = 0;
+
     var sched = later.parse.recur().every(7).second(),
         t = later.setInterval(function () {
             async.waterfall([
                 function (next) {
+                    countDao.findFirst(function(record){
+                        if(record){
+                            i = record.count;
+                        }
+                        console.log("i: "+i);
+                    });
+                    next();
+                },
+                function (next) {
                     currentBrowseId = amazonGenre.getLeafGenreList()[i].BrowseNodeId;
-                    console.log(currentBrowseId);
+                    console.log("currentBrowseId:" + currentBrowseId);
                     console.log("pageNum:" + pageNum);
                     console.log("price:" + price);
+                    next();
+                },
+                function (next) {
+                    countDao.update(i);
                     next();
                 },
                 function (next) {
@@ -68,19 +83,29 @@ router.get('/reload', function (req, res) {
                 },
                 function (result, next) {
                     // 第二个function, 查询到的信息登录到数据库
-                    totalpage = result.Items.TotalPages;
-                    console.log("total page:" + totalpage);
+                    if(result.Items.TotalPages) {
+
+                        totalpage = result.Items.TotalPages;
+                        console.log("total page:" + totalpage);
+                    } else {
+                        console.log("error:  " + result);
+                    }
                     var items;
                     if(result.Items.Item) {
-                        console.log("Result from amazon", result.Items.Item);
+//                        console.log("Result from amazon", result.Items.Item);
                         items = result.Items.Item;
                         bookDao.create(items, next);
                     }
                     if(result.Items.Request.Errors){
                         console.log(result.Items.Request.Errors);
                     }
-                    
+
                     if(i == 3368){
+                        //change book zone
+//                        bookDao.changeCollection("",function(err,data){
+//
+//                        });
+//                        i = 0;
                         t.clear();
                     }
                     next();
@@ -114,82 +139,85 @@ router.get('/reload', function (req, res) {
 /* GET test page. */
 router.get('/test', function (req, res) {
 
-    var price = 1000;
-    //later
-    later.date.localTime();
-
-    console.log("Now:" + new Date());
-    var pageNum = 1;
-    var i = 0;
-    var currentBrowseId = 0;
-    var totalpage = 0;
-    var sched = later.parse.recur().every(5).second(),
-        t = later.setInterval(function () {
-            async.waterfall([
-                function (next) {
-                    currentBrowseId = amazonGenre.getLeafGenreList()[i].BrowseNodeId;
-                    console.log(currentBrowseId);
-                    console.log("pageNum:" + pageNum);
-                    console.log("price:" + price);
-                    next();
-                },
-                function (next) {
-
-                    // 第一个function, 查询信息
-                    //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
-                    prodAdv.call("ItemSearch", {
-                        BrowseNode: currentBrowseId,
-                        SearchIndex: "Books",
-                        MinimumPrice: price,
-                        MaximumPrice: price*10,
-                        ResponseGroup: "SalesRank,ItemAttributes",
-                        Sort: "salesrank",
-                        ItemPage: pageNum
-                    }, next);
-                },
-                function (result, next) {
-                    // 第二个function, 查询到的信息登录到数据库
-                    totalpage = result.Items.TotalPages;
-                    console.log("total page:" + totalpage);
-                    if(result.Items.Item) {
-                        console.log("Result from amazon", result.Items.Item);
-                    }
-                    if(result.Items.Request.Errors){
-                        console.log(result.Items.Request.Errors);
-                    }
-
-//                    bookDao.create(items, next);
-                    if(i == 3368){
-                        t.clear();
-                    }
-                    next();
-                },
-                function (next) {
-                    pageNum++;
-                    if (pageNum > totalpage || pageNum == 11) {
-                        // 价格+1
-                        pageNum = 1;
-                        price = price * 10;
-                    }
-                    if(price == 100000){
-                        i++;
-                        price = 1000;
-                    }
-                }
-            ], function (err, result) {
-                if (err) {
-//                    console.log(err)
+//    var price = 1000;
+//    //later
+//    later.date.localTime();
+//
+//    console.log("Now:" + new Date());
+//    var pageNum = 1;
+//    var i = 0;
+//    var currentBrowseId = 0;
+//    var totalpage = 0;
+//    var sched = later.parse.recur().every(5).second(),
+//        t = later.setInterval(function () {
+//            async.waterfall([
+//                function (next) {
+//                    currentBrowseId = amazonGenre.getLeafGenreList()[i].BrowseNodeId;
+//                    console.log(currentBrowseId);
+//                    console.log("pageNum:" + pageNum);
+//                    console.log("price:" + price);
+//                    next();
+//                },
+//                function (next) {
+//
+//                    // 第一个function, 查询信息
+//                    //根据关键字，暧昧搜索，获得搜索结果链接，详细内容。
+//                    prodAdv.call("ItemSearch", {
+//                        BrowseNode: currentBrowseId,
+//                        SearchIndex: "Books",
+//                        MinimumPrice: price,
+//                        MaximumPrice: price*10,
+//                        ResponseGroup: "SalesRank,ItemAttributes",
+//                        Sort: "salesrank",
+//                        ItemPage: pageNum
+//                    }, next);
+//                },
+//                function (result, next) {
+//                    // 第二个function, 查询到的信息登录到数据库
+//                    totalpage = result.Items.TotalPages;
+//                    console.log("total page:" + totalpage);
+//                    if(result.Items.Item) {
+//                        console.log("Result from amazon", result.Items.Item);
+//                    }
+//                    if(result.Items.Request.Errors){
+//                        console.log(result.Items.Request.Errors);
+//                    }
+//
+////                    bookDao.create(items, next);
+//                    if(i == 3368){
+//                        t.clear();
+//                    }
+//                    next();
+//                },
+//                function (next) {
+//                    pageNum++;
+//                    if (pageNum > totalpage || pageNum == 11) {
+//                        // 价格+1
+//                        pageNum = 1;
+//                        price = price * 10;
+//                    }
+//                    if(price == 100000){
+//                        i++;
+//                        price = 1000;
+//                    }
+//                }
+//            ], function (err, result) {
+//                if (err) {
+////                    console.log(err)
+////                    return res.json({
+////                        error: err
+////                    });
+//                } else {
 //                    return res.json({
-//                        error: err
+//                        result: "OK"
 //                    });
-                } else {
-                    return res.json({
-                        result: "OK"
-                    });
-                }
-            });
+//                }
+//            });
+//
+//        }, sched);
 
-        }, sched);
+//    amazonGenre.getLeafGenreList()
+
 
 
 });

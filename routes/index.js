@@ -83,6 +83,7 @@ router.get('/reload', function (req, res) {
                 },
                 function (result, next) {
                     // 第二个function, 查询到的信息登录到数据库
+                    try {
                     if(result.Items.TotalPages) {
 
                         totalpage = result.Items.TotalPages;
@@ -108,6 +109,9 @@ router.get('/reload', function (req, res) {
 //                        i = 0;
                         t.clear();
                     }
+                             } catch (e) {
+                             console.log(e);
+                             }
                     next();
                 },
                 function (next) {

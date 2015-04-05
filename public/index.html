@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amazonランキング</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="stylesheets/style.css" rel="stylesheet">
+</head>
+<body data-ng-app="dawnApp" data-ng-controller="MainController">
+<header id="top" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" data-toggle="collapse" data-target="#navbar" class="navbar-toggle collapsed"><span
+                    class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span
+                    class="icon-bar"></span></button>
+            <a href="#" class="navbar-brand">Dawn</a>
+        </div>
+        <nav id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">ホーム</a></li>
+                <li><a href="/amazon">Amazon</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<div class="container-fluid">
+    <div class="row">
+        <!-- App Body -->
+        <div class="app-body" ng-class="{loading: loading}">
+            <div ng-show="loading" class="app-content-loading">
+                <i class="fa fa-spinner fa-spin loading-spinner"></i>
+            </div>
+
+            <ng-view class="app-content" ng-hide="loading"></ng-view>
+        </div>
+    </div>
+</div>
+</body>
+<footer class="footer">
+    <div class="container">
+        <p class="text-muted">Copyright &copy;, Inc. All Rights Reserved.</p>
+    </div>
+    <script src="lib/jquery/dist/jquery.min.js"></script>
+    <script src="lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="lib/angular/angular.min.js"></script>
+    <script src="lib/angular-route/angular-route.min.js"></script>
+
+    <!--Angular JS-->
+    <script src="scripts/app.js"></script>
+    <script src="scripts/controllers/MainController.js"></script>
+</footer>
+</html>

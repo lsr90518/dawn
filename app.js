@@ -35,6 +35,7 @@ app.use(session({
 }));
 app.use(flash());
 app.use(require('stylus').middleware(path.join(__dirname, 'public')));
+app.use('/lib', express.static(path.join(__dirname, 'bower_components')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 var authFilter = require('./filter/auth')({
@@ -43,9 +44,6 @@ var authFilter = require('./filter/auth')({
   ]
 });
 //app.use(authFilter);
-
-app.use('/app', express.static(path.join(__dirname, 'app')));
-app.use(express.static(path.join(__dirname, 'bower_components')));
 
 if (app.get('env') === 'development') {
   app.locals.pretty = true;

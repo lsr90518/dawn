@@ -1,6 +1,45 @@
 extends layout
 
 block content
-  p Welcome to #{title}
-  p
-    i.fa.fa-bomb.fa-4x
+  ol.breadcrumb
+    each node in parentNodes
+      li
+        a(href='/#{node.BrowseNodeId}') #{node.Name || "ホーム"}
+
+  each node in currentNode.Children
+    .col-xs-4
+      a(href='/#{node.BrowseNodeId}')
+        span.label.label-primary #{node.Name}
+
+
+  table.table.table-striped.table-hover.table-condensed
+    thead
+      tr
+        th(nowrap) タイトル
+        th(nowrap) 著者
+        th(nowrap) 出版社
+        th(nowrap) ISBN
+        th(nowrap) Amazon
+        th(nowrap) 日本の古書屋
+        th(nowrap) スーパー源氏
+        th(nowrap) ヤフオク
+        th(nowrap) 楽天
+    tbody
+      each book in books
+        tr
+          td=book.ItemAttributes.Title
+          td=book.ItemAttributes.Author
+          td=book.ItemAttributes.Publisher
+          td=book.ItemAttributes.ISBN
+          td
+            - if (book.ItemAttributes.ListPrice && typeof(book.ItemAttributes.ListPrice.FormattedPrice) !== 'undefined'){
+              a(href="#{book.DetailPageURL}", target="_blank") #{book.ItemAttributes.ListPrice.FormattedPrice}
+            - } else {
+            a(href="#{book.DetailPageURL}", target="_blank") リンク
+            - }
+          td
+            a(href="https://www.kosho.or.jp/products/list.php?mode=search_retry&search_isbn=#{book.ItemAttributes.ISBN}", target="_blank") 検索
+          td
+          td
+          td
+            a(href="http://search.books.rakuten.co.jp/bksearch/dt?bisbn=#{book.ItemAttributes.ISBN}", target="_blank") 検索

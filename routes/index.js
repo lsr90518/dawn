@@ -11,9 +11,36 @@ prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJ
 
 
 /* 显示主页. */
-router.get('/', function (req, res) {
-    res.render('index', {
-        title: "Dawn"
+//router.get('/', function (req, res) {
+//    res.render('index', {
+//        title: "Dawn"
+//    });
+//});
+
+router.get('/:id?', function(req, res) {
+    var id = req.params.id || '';
+    // 当前结点信息
+    if (!id) {
+        var currentNode = amazonGenre.getRootGenre();
+    } else {
+        var currentNode = amazonGenre.findNode(id, true);
+    }
+    // 父结节列表
+    var parentNodes = amazonGenre.findParent(currentNode.BrowseNodeId, true);
+
+    if (currentNode.Children.length < 1) {
+        // TODO search book
+    }
+
+    require('../lib/mongo').db.collection('books', function(err, collection) {
+        if(err) throw err;
+        collection.find({}).limit(30).toArray(function(err, list) {
+            res.render('index', {
+                currentNode: currentNode,
+                parentNodes: parentNodes,
+                books: list
+            });
+        });
     });
 });
 

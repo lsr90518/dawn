@@ -2,7 +2,7 @@ module.exports = exports = function (app) {
 
     app.use('/', require('./index'));
 
-    app.use('/book', './book');
+    app.use('/book', require('./book'));
 
     // catch 404 and forward to error handler
     app.use(function (req, res, next) {

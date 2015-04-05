@@ -8,3 +8,5 @@ router.get('/', function (req, res) {
 
     });
 });
+
+module.exports = exports = router;

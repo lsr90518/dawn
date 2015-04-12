@@ -19,6 +19,15 @@ prodAdv = aws.createProdAdvClient('AKIAIT3AEIDR54CLXCAA', 'iA2hLHPySFIK9iJifAraJ
 
 router.get('/:id?', function(req, res) {
     var id = req.params.id || '';
+	var priceFrom = req.query['price-from'] || 0;
+	var priceTo = req.query['price-to'] || Number.MAX_VALUE;
+	var rankingFrom = req.query['ranking-from'] || 0;
+	var rankingTo = req.query['ranking-to'] || Number.MAX_VALUE;
+	var page = req.query.page || 1;
+	if (page < 1) page = 1;
+	var pageSize = 100;
+	var skip = (page - 1) * pageSize;
+
     // 当前结点信息
     if (!id) {
         var currentNode = amazonGenre.getRootGenre();
@@ -27,14 +36,28 @@ router.get('/:id?', function(req, res) {
     }
     // 父结节列表
     var parentNodes = amazonGenre.findParent(currentNode.BrowseNodeId, true);
-
+ 
     if (currentNode.Children.length < 1) {
         // TODO search book
     }
 
     require('../lib/mongo').db.collection('books', function(err, collection) {
         if(err) throw err;
-        collection.find({}).limit(30).toArray(function(err, list) {
+
+        collection
+			.find({
+				SalesRank:{
+					$exists: true
+				//	,
+				//	$gte: rankingFrom,
+				//	$lt: rankingTo
+				}
+				// Price Cond
+			})
+			.sort({SalesRank: 1})
+			.skip(skip)
+			.limit(pageSize)
+			.toArray(function(err, list) {
             res.render('index', {
                 currentNode: currentNode,
                 parentNodes: parentNodes,

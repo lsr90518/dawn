@@ -225,3 +225,9 @@ tramp
 
 # cask packages
 .cask/
+
+### Bower ###
+bower_components
+.bower-cache
+.bower-registry
+.bower-tmp

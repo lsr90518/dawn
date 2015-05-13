@@ -1,6 +1,59 @@
 extends layout
 
 block content
-  p Welcome to #{title}
-  p
-    i.fa.fa-bomb.fa-4x
+  ol.breadcrumb
+    each node in parentNodes
+      li
+        a(href='/#{node.BrowseNodeId}') #{node.Name || "ホーム"}
+
+  form.form-horizontal(action="/")
+    .form-group
+      label.col-sm-2.control-label(for="price-from") 金額
+      .input-group.col-sm-4
+        input#price-from.form-control.col-sm-2(type="number", name="price-from")
+        .input-group-addon から
+        input#price-to.form-control.col-sm-2(type="number", name="price-to")
+        .input-group-addon まで
+    .form-group
+      label.col-sm-2.control-label(for="ranking-from")  ランキング
+      .input-group.col-sm-4
+        input#ranking-from.form-control.col-sm-2(type="number", name="ranking-from")
+        .input-group-addon から
+        input#ranking-to.form-control.col-sm-2(type="number", name="ranking-to")
+        .input-group-addon まで
+    .form-group
+      .col-sm-offset-2
+        input.btn.btn-success(type="submit", value="検索")
+  table.table.table-striped.table-hover.table-condensed
+    thead
+      tr
+        th(nowrap) Rank
+        th(nowrap) タイトル
+        th(nowrap) 著者
+        th(nowrap) 出版社
+        th(nowrap) ISBN
+        th(nowrap) Amazon
+        th(nowrap) 日本の古書屋
+        th(nowrap) スーパー源氏
+        th(nowrap) ヤフオク
+        th(nowrap) 楽天
+    tbody
+      each book in books
+        tr
+          td=book.SalesRank
+          td=book.ItemAttributes.Title
+          td=book.ItemAttributes.Author
+          td=book.ItemAttributes.Publisher
+          td=book.ItemAttributes.ISBN
+          td
+            - if (book.ItemAttributes.ListPrice && typeof(book.ItemAttributes.ListPrice.FormattedPrice) !== 'undefined'){
+              a(href="#{book.DetailPageURL}", target="_blank") #{book.ItemAttributes.ListPrice.FormattedPrice}
+            - } else {
+            a(href="#{book.DetailPageURL}", target="_blank") リンク
+            - }
+          td
+            a(href="https://www.kosho.or.jp/products/list.php?mode=search_retry&search_word=#{book.ItemAttributes.Title}", target="_blank") 検索
+          td
+          td
+          td
+            a(href="http://search.books.rakuten.co.jp/bksearch/dt?bisbn=#{book.ItemAttributes.ISBN}", target="_blank") 検索

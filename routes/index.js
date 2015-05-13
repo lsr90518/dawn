@@ -47,96 +47,118 @@ router.get('/reload', function (req, res) {
     var currentBrowseId = 0;
     var totalpage = 0;
 
-    var sched = later.parse.recur().every(7).second(),
-        t = later.setInterval(function () {
-            async.waterfall([
-                function (next) {
-                    countDao.findFirst(function(record){
-                        if(record){
-                            i = record.count;
-                        }
-                        console.log("i: "+i);
-                    });
-                    next();
-                },
-                function (next) {
-                    currentBrowseId = amazonGenre.getLeafGenreList()[i].BrowseNodeId;
-                    console.log("currentBrowseId:" + currentBrowseId);
-                    console.log("pageNum:" + pageNum);
-                    console.log("price:" + price);
-                    next();
-                },
-                function (next) {
-                    countDao.update(i);
-                    next();
-                },
-                function (next) {
-                    prodAdv.call("ItemSearch", {
-                        BrowseNode: currentBrowseId,
-                        SearchIndex: "Books",
-                        MinimumPrice: price,
-                        MaximumPrice: price*10,
-                        ResponseGroup: "SalesRank,ItemAttributes",
-                        Sort: "salesrank",
-                        ItemPage: pageNum
-                    }, next);
-                },
-                function (result, next) {
-                    // 第二个function, 查询到的信息登录到数据库
-                    try {
-                    if(result.Items.TotalPages) {
+    //for
+    // while(1){
+    //   console.log(i++);
+    //   if( i == 3368){
+    //     break;
+    //   } else {
+    //     setTimeout(function(){},7000);
+    //   }
+    // }
+    var t = setInterval(function(){
 
-                        totalpage = result.Items.TotalPages;
-                        console.log("total page:" + totalpage);
-                    } else {
-                        console.log("error:  " + result);
-                    }
-                    var items;
-                    if(result.Items.Item) {
-//                        console.log("Result from amazon", result.Items.Item);
-                        items = result.Items.Item;
-                        bookDao.create(items, next);
-                    }
-                    if(result.Items.Request.Errors){
-                        console.log(result.Items.Request.Errors);
-                    }
+      //get data from amazon
+      pa();
+      //save to db
+      //loop
+      if(i == 5){
+        clearInterval(t);
+      } else {
 
-                    if(i == 3368){
-                        //change book zone
-//                        bookDao.changeCollection("",function(err,data){
+      }
+    },7000);
+
+//     var sched = later.parse.recur().every(7).second(),
+//         t = later.setInterval(function () {
+//             async.waterfall([
+//                 function (next) {
+//                     countDao.findFirst(function(record){
+//                         if(record){
+//                             i = record.count;
+//                         }
+//                         console.log("i: "+i);
+//                     });
+//                     next();
+//                 },
+//                 function (next) {
+//                     currentBrowseId = amazonGenre.getLeafGenreList()[i].BrowseNodeId;
+//                     console.log("currentBrowseId:" + currentBrowseId);
+//                     console.log("pageNum:" + pageNum);
+//                     console.log("price:" + price);
+//                     next();
+//                 },
+//                 function (next) {
+//                     countDao.update(i);
+//                     next();
+//                 },
+//                 function (next) {
+//                     prodAdv.call("ItemSearch", {
+//                         BrowseNode: currentBrowseId,
+//                         SearchIndex: "Books",
+//                         MinimumPrice: price,
+//                         MaximumPrice: price*10,
+//                         ResponseGroup: "SalesRank,ItemAttributes",
+//                         Sort: "salesrank",
+//                         ItemPage: pageNum
+//                     }, next);
+//                 },
+//                 function (result, next) {
+//                     // 第二个function, 查询到的信息登录到数据库
+//                     try {
+//                     if(result.Items.TotalPages) {
 //
-//                        });
-//                        i = 0;
-                        t.clear();
-                    }
-                             } catch (e) {
-                             console.log(e);
-                             }
-                    next();
-                },
-                function (next) {
-                    pageNum++;
-                    if (pageNum > totalpage || pageNum == 11) {
-                        // 价格+1
-                        pageNum = 1;
-                        price = price * 10;
-                    }
-                    if(price == 100000){
-                        i++;
-                        price = 1000;
-                    }
-                }
-            ], function (err, result) {
-                if (err) {
-                } else {
-                    return res.json({
-                        result: "OK"
-                    });
-                }
-            });
-
-        }, sched);
-    return res.json({"data": "ok"});
+//                         totalpage = result.Items.TotalPages;
+//                         console.log("total page:" + totalpage);
+//                     } else {
+//                         console.log("error:  " + result);
+//                     }
+//                     var items;
+//                     if(result.Items.Item) {
+// //                        console.log("Result from amazon", result.Items.Item);
+//                         items = result.Items.Item;
+//                         bookDao.create(items, next);
+//                     }
+//                     if(result.Items.Request.Errors){
+//                         console.log(result.Items.Request.Errors);
+//                     }
+//
+//                     if(i == 3368){
+//                         //change book zone
+// //                        bookDao.changeCollection("",function(err,data){
+// //
+// //                        });
+// //                        i = 0;
+//                         t.clear();
+//                     }
+//                              } catch (e) {
+//                              console.log(e);
+//                              }
+//                     next();
+//                 },
+//                 function (next) {
+//                     pageNum++;
+//                     if (pageNum > totalpage || pageNum == 11) {
+//                         // 价格+1
+//                         pageNum = 1;
+//                         price = price * 10;
+//                     }
+//                     if(price == 100000){
+//                         i++;
+//                         price = 1000;
+//                     }
+//                 }
+//             ], function (err, result) {
+//                 if (err) {
+//                 } else {
+//                     return res.json({
+//                         result: "OK"
+//                     });
+//                 }
+//             });
+//
+//         }, sched);
+//     return res.json({"data": "ok"});
 
 });
 
@@ -252,5 +274,19 @@ router.get('/getNode/:id', function (req, res) {
     res.json(amazonGenre.findNode(nodeId, false));
 });
 
+function pa(){
+  prodAdv.call("ItemSearch", {
+                          BrowseNode: 507140,
+                          SearchIndex: "Books",
+                          MinimumPrice: 1000,
+                          MaximumPrice: 1000*10,
+                          ResponseGroup: "SalesRank,ItemAttributes",
+                          Sort: "salesrank",
+                          ItemPage: 1
+                      }, function(err, result){
+                        // console.log(result);
+                        console.log(i++);
+                      });
+}
 
 module.exports = router;

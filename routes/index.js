@@ -55,7 +55,7 @@ router.get('/:id?', function(req, res) {
 				// Price Cond
 			})
 			.sort({SalesRank: 1})
-			.skip(skip)
+//			.skip(skip)
 			.limit(pageSize)
 			.toArray(function(err, list) {
             res.render('index', {

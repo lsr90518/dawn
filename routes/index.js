@@ -70,7 +70,22 @@ router.get('/reload', function (req, res) {
                               totalpage = result.Items.TotalPages;
                               items = result.Items.Item;
 
-                                bookDao.create(items, function(result){
+                              var books = items.map(function(item) {
+                                try{
+                                  //save to db
+                                  return book = {
+                                    'ASIN':item.ASIN,
+                                    'DetailPageURL':item.DetailPageURL,
+                                    'ItemLinks':item.ItemLinks,
+                                    'SalesRank':parseInt(item.SalesRank),
+                                    'ItemAttributes':item.ItemAttributes
+                                  };
+                                } catch (e){
+
+                                }
+
+                               });
+                                bookDao.create(books, function(result){
                                     console.log("what the fuck error: "+result);
                                 });
 

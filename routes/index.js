@@ -70,24 +70,41 @@ router.get('/reload', function (req, res) {
                               totalpage = result.Items.TotalPages;
                               items = result.Items.Item;
 
-                              var books = items.map(function(item) {
+
+
+                              items.map(function(item) {
                                 try{
-                                  //save to db
-                                  return book = {
+
+                                  var hasBook = 1;
+                                  if(typeof(item.ItemAttributes.ListPrice.FormattedPrice) == 'undefined'){
+                                    hasBook = 0;
+                                  }
+
+                                  var book = {
                                     'ASIN':item.ASIN,
                                     'DetailPageURL':item.DetailPageURL,
                                     'ItemLinks':item.ItemLinks,
                                     'SalesRank':parseInt(item.SalesRank),
-                                    'ItemAttributes':item.ItemAttributes
+                                    'ItemAttributes':item.ItemAttributes,
+                                    'HasBook':hasBook
                                   };
-                                } catch (e){
 
+                                  var findCond = {ASIN: book.ASIN};
+
+                                  bookDao.removeAll(findCond,function(err, number){
+                                    console.log("removed ", err, number);
+
+                                    bookDao.create(book, function(error){
+                                      console.log("fucking error!");
+                                    });
+
+                                  });
+
+                                } catch (e){
+                                  console("map error ", e);
                                 }
 
                                });
-                                bookDao.create(books, function(result){
-                                    console.log("what the fuck error: "+result);
-                                });
 
                                 //loop control
                                 //pageNum loop

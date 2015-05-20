@@ -1,29 +1,55 @@
 extends layout
 
+block script
+  script.
+    function next() {
+      var page = parseInt($('#pageNumber').val()) + 1;
+      $('#pageNumber').val(page);
+      $('#searchForm').submit();
+    }
+    function prev() {
+      var page = parseInt($('#pageNumber').val()) - 1;
+      if (page < 1) page = 1;
+      $('#pageNumber').val(page);
+      $('#searchForm').submit();
+    }
+
 block content
   ol.breadcrumb
     each node in parentNodes
       li
         a(href='/#{node.BrowseNodeId}') #{node.Name || "ホーム"}
 
-  form.form-horizontal(action="/")
+  form#searchForm.form-horizontal(action="/")
+    input#pageNumber(type="hidden", name="page", value=page)
     .form-group
       label.col-sm-2.control-label(for="price-from") 金額
       .input-group.col-sm-4
-        input#price-from.form-control.col-sm-2(type="number", name="price-from")
+        input#price-from.form-control.col-sm-2(type="number", name="price-from", value=priceFrom)
         .input-group-addon から
-        input#price-to.form-control.col-sm-2(type="number", name="price-to")
+        input#price-to.form-control.col-sm-2(type="number", name="price-to", value=priceTo)
         .input-group-addon まで
     .form-group
       label.col-sm-2.control-label(for="ranking-from")  ランキング
       .input-group.col-sm-4
-        input#ranking-from.form-control.col-sm-2(type="number", name="ranking-from")
+        input#ranking-from.form-control.col-sm-2(type="number", name="ranking-from", value=rankingFrom)
         .input-group-addon から
-        input#ranking-to.form-control.col-sm-2(type="number", name="ranking-to")
+        input#ranking-to.form-control.col-sm-2(type="number", name="ranking-to", value=rankingTo)
         .input-group-addon まで
     .form-group
       .col-sm-offset-2
         input.btn.btn-success(type="submit", value="検索")
+  nav
+    ul.pager
+      if page > 1
+        li.previous
+          a(href="javascript:prev()")
+            span(aria-hidden="true")&larr;
+            前のページへ
+      li.next
+        a(href="javascript:next()")
+          次のページへ
+          span(aria-hidden="true")&rarr;
   table.table.table-striped.table-hover.table-condensed
     thead
       tr
@@ -47,13 +73,26 @@ block content
           td=book.ItemAttributes.ISBN
           td
             - if (book.ItemAttributes.ListPrice && typeof(book.ItemAttributes.ListPrice.FormattedPrice) !== 'undefined'){
-              a(href="#{book.DetailPageURL}", target="_blank") #{book.ItemAttributes.ListPrice.FormattedPrice}
+              a(href="#{book.DetailPageURL}", target="_blank") #{book.ItemAttributes.ListPrice.FormattedPrice}(#{book.PriceSecondHand})
             - } else {
             a(href="#{book.DetailPageURL}", target="_blank") リンク
             - }
           td
-            a(href="https://www.kosho.or.jp/products/list.php?mode=search_retry&search_word=#{book.ItemAttributes.Title}", target="_blank") 検索
+            a(href="https://www.kosho.or.jp/products/list.php?mode=search_retry&search_word=#{book.ItemAttributes.Title}", target="_blank") 古本屋
           td
+            a(href="http://rdr.supergenji.jp/cgi-bin/sieta.pl?rp=http%3A%2F%2Fsgenji.jp%2Findex.html&mojicode=utf8&tk=#{book.ItemAttributes.Title}&aa=%E5%90%AB%E3%82%80&ak=&bb=%E5%90%AB%E3%82%80&pk=#{book.ItemAttributes.Publisher}&cc=%E5%90%AB%E3%82%80&sk=&dd=%E5%90%AB%E3%82%80&jm=classic&pci=10&pmi=100&rc=50&of=1&sm=p_f&CID=1&x=14&y=3", target="_blank") 源氏
           td
+            a(href="http://auctions.search.yahoo.co.jp/search?ei=UTF-8&p=#{book.ItemAttributes.Title}&tab_ex=commerce&auccat=21600&slider=0", target="_blank") ヤフオク
           td
-            a(href="http://search.books.rakuten.co.jp/bksearch/dt?bisbn=#{book.ItemAttributes.ISBN}", target="_blank") 検索
+            a(href="http://search.books.rakuten.co.jp/bksearch/dt?bisbn=#{book.ItemAttributes.ISBN}", target="_blank") 楽天
+  nav
+    ul.pager
+    if page > 1
+      li.previous
+        a(href="javascript:prev()")
+          span(aria-hidden="true")&larr;
+          前のページへ
+    li.next
+      a(href="javascript:next()")
+        次のページへ
+        span(aria-hidden="true")&rarr;

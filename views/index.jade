@@ -30,6 +30,12 @@ block content
         input#price-to.form-control.col-sm-2(type="number", name="price-to", value=priceTo)
         .input-group-addon まで
     .form-group
+      .col-sm-offset-2.col-sm-10
+        .checkbox
+          label
+            input(type="checkbox", name="no-price", checked=noPrice)
+            span 金額がない本のみ
+    .form-group
       label.col-sm-2.control-label(for="ranking-from")  ランキング
       .input-group.col-sm-4
         input#ranking-from.form-control.col-sm-2(type="number", name="ranking-from", value=rankingFrom)

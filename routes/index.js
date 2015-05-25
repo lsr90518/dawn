@@ -52,12 +52,20 @@ router.get('/:id?', function(req, res) {
     if (req.query['ranking-to'] != undefined && req.query['ranking-to'] != '') {
       rankCond.$lt = rankingTo;
     }
+    
     var priceCond = {$exists: true};
-    if (req.query['price-from'] != undefined && req.query['price-from'] != '') {
-      priceCond.$gte = priceFrom;
-    }
-    if (req.query['price-to'] != undefined && req.query['price-to'] != '') {
-      priceCond.$lt = priceTo;
+    var noPrice = req.query['no-price']; // 金額がない本のみ検索する
+    if (noPrice) {
+      priceCond = {$exists: false};
+      req.query['price-from'] = '';
+      req.query['price-to'] = '';
+    } else {
+      if (req.query['price-from'] != undefined && req.query['price-from'] != '') {
+        priceCond.$gte = priceFrom;
+      }
+      if (req.query['price-to'] != undefined && req.query['price-to'] != '') {
+        priceCond.$lt = priceTo;
+      }
     }
     var searchCond = {
       SalesRank: rankCond,
@@ -88,6 +96,7 @@ router.get('/:id?', function(req, res) {
               priceTo: req.query['price-to'] || '',
               rankingFrom: req.query['ranking-from'] || '',
               rankingTo: req.query['ranking-to'] || '',
+              noPrice: req.query['no-price']? true: false,
               page: page
           });
         });

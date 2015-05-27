@@ -69,7 +69,7 @@ router.get('/:id?', function(req, res) {
     }
     var searchCond = {
       SalesRank: rankCond,
-      PriceNew: priceCond
+      HasBook: priceCond
     };
 
 
